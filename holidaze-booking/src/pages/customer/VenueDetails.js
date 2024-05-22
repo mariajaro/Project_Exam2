@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const VenueDetails = () => {
     const { venueId } = useParams();
     const [venue, setVenue] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [startDate, setStartDate] = useState(new Date()); // Default start date as today
+    const [availableDates, setAvailableDates] = useState([]); // State to store available dates
 
     useEffect(() => {
         const fetchVenueDetails = async () => {
@@ -14,13 +18,12 @@ const VenueDetails = () => {
 
             try {
                 const response = await fetch(url);
-                console.log('Response:', response);
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
                 const data = await response.json();
-                console.log('Data:', data);
-                setVenue(data.data); // Access the nested 'data' object
+                setVenue(data.data); // Ensure you are using correct path to access the venue data
+                setAvailableDates(data.data.availableDates || []); // Assuming available dates comes with venue details
                 setLoading(false);
             } catch (error) {
                 console.error('Error fetching venue details:', error);
@@ -39,42 +42,21 @@ const VenueDetails = () => {
     return (
         <div>
             <h2>{venue.name}</h2>
-            {venue.media && venue.media.length > 0 && (
-                <div>
-                    {venue.media.map((mediaItem, index) => (
-                        <img
-                            key={index}
-                            src={mediaItem.url}
-                            alt={mediaItem.alt || 'Venue image'}
-                            style={{ maxWidth: '100%', marginBottom: '10px' }}
-                        />
-                    ))}
-                </div>
-            )}
+            {venue.media && venue.media.map((media, index) => (
+                <img key={index} src={media.url} alt={media.alt || "Venue"} style={{ maxWidth: "100%" }} />
+            ))}
             <p>{venue.description}</p>
             <p>Price: ${venue.price}</p>
             <p>Max Guests: {venue.maxGuests}</p>
             <p>Rating: {venue.rating}</p>
-            {venue.meta && (
-                <div>
-                    <h3>Amenities</h3>
-                    <ul>
-                        <li>Wifi: {venue.meta.wifi ? 'Yes' : 'No'}</li>
-                        <li>Parking: {venue.meta.parking ? 'Yes' : 'No'}</li>
-                        <li>Breakfast: {venue.meta.breakfast ? 'Yes' : 'No'}</li>
-                        <li>Pets: {venue.meta.pets ? 'Yes' : 'No'}</li>
-                    </ul>
-                </div>
-            )}
-            {venue.location && (
-                <div>
-                    <h3>Location</h3>
-                    <p>{venue.location.address}, {venue.location.city}, {venue.location.zip}, {venue.location.country}</p>
-                    <p>Continent: {venue.location.continent}</p>
-                    <p>Latitude: {venue.location.lat}</p>
-                    <p>Longitude: {venue.location.lng}</p>
-                </div>
-            )}
+            {/* Here you integrate the DatePicker */}
+            <DatePicker
+                selected={startDate}
+                onChange={date => setStartDate(date)}
+                includeDates={availableDates.map(date => new Date(date))}
+                inline
+            />
+            {/* Details about venue location and amenities */}
         </div>
     );
 };
